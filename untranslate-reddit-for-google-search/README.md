@@ -10,6 +10,14 @@ Install [Tampermonkey](https://www.tampermonkey.net/) and [download the script](
 
 ## Changelog
 
+### 0.4.0
+
+* Refactored for readability, split to modular js files
+* Use `Promise.allSettled`
+* Replace urls to show original
+* Add UI settings to toggle
+
 ### 0.3.0
 
-Fix to manually verbosely match all TLDs from <https://www.google.com/supported_domains>.
+* Fix to manually verbosely match all TLDs from <https://www.google.com/supported_domains>.
+  Replaced `/(\.google\.\w+(\.\w+)*)\s?/` with `// @match         http*://*$1/search*\n`

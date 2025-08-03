@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Untranslate Reddit for Google Search
 // @description   Untranslate Reddit results from Google Search
-// @version       0.3.0
+// @version       0.4.0
 // @icon          https://www.gstatic.com/images/branding/searchlogo/ico/favicon.ico
 // @author        JogerJ
 // @author        KaKi87
@@ -11,7 +11,13 @@
 // @downloadURL   https://raw.githubusercontent.com/jogerj/userscripts/refs/heads/main/untranslate-reddit-for-google-search/main.user.js
 //
 // @grant         GM.xmlHttpRequest
+// @grant         GM_setValue
+// @grant         GM_getValue
 // @connect       old.reddit.com
+//
+// @require       https://github.com/jogerj/userscripts/raw/refs/tags/untranslate-reddit-for-google-search/0.4.0/untranslate-reddit-for-google-search/settings-ui.js
+// @require       https://github.com/jogerj/userscripts/raw/refs/tags/untranslate-reddit-for-google-search/0.4.0/untranslate-reddit-for-google-search/reddit-processor.js
+//
 // @match         http*://*.google.com/search*
 // @match         http*://*.google.ad/search*
 // @match         http*://*.google.ae/search*
@@ -202,19 +208,18 @@
 // ==/UserScript==
 
 (async () => {
-    for(const element of document.querySelectorAll('a[href*="reddit.com"][href*="/?tl="]')){
-        const titleElement = element.querySelector('[role="link"], h3');
-        if(!titleElement) continue;
-        const url = new URL(element.getAttribute('href'));
-        url.hostname = 'old.reddit.com';
-        // noinspection JSVoidFunctionReturnValueUsed,JSCheckFunctionSignatures
-        const
-            { response: document } = await GM.xmlHttpRequest({ url, responseType: 'document' }),
-            og = [...document.querySelectorAll('[property^="og:"]')].reduce((og, element) => ({
-                ...og,
-                [element.getAttribute('property').slice(3)]:
-                    element.getAttribute('content')
-            }), {});
-        titleElement.textContent = og.title;
+  try {
+    const processor = new window.RedditProcessor();
+    await processor.init();
+
+    const linkElements = Array.from(processor.getRedditLinks());
+    
+    if (linkElements.length > 0) {
+      const settingsUI = new window.SettingsUI(processor.settings);
+      settingsUI.create();
+      await processor.processLinks(linkElements);
     }
-})().catch(console.error);
+  } catch (err) {
+    console.error('Reddit Untranslate Error:', err);
+  }
+})();
